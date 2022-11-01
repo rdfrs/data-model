@@ -1,18 +1,19 @@
 use regex::Regex;
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Error, Debug, PartialEq, Eq)]
 pub enum Error {
     #[error("{0} is not a valid absolute IRI")]
     InvalidURIError(String), // Question: is it possible to accept both the string _and_ a #[from] parameter? does this even make sense?
 }
 
 #[derive(PartialEq, Eq, Debug)]
-struct NamedNode {
+pub struct NamedNode {
     value: String, // is there a way to hide the field since I'm validating it in the `new` fn
 }
 
-const ABSOLUTE_URI_EXPRESSION: &str = r"(https:[/][/]|http:[/][/]|www.)[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*$";
+// TODO: need a more robust regex
+const ABSOLUTE_URI_EXPRESSION: &str = r"^(?:http|https)://(?:\w+\.)+\w+/.*$";
 
 impl NamedNode {
     fn new(value: &str) -> Result<Self, Error> {
@@ -21,7 +22,7 @@ impl NamedNode {
 
         if regex.is_match(value) {
             Ok(NamedNode {
-                value: String::from(value),
+                value: value.to_string(),
             })
         } else {
             Err(Error::InvalidURIError(value.to_string()))
@@ -30,12 +31,12 @@ impl NamedNode {
 }
 
 #[derive(PartialEq, Eq, Debug)]
-struct BlankNode {
+pub struct BlankNode {
     value: String,
 }
 
 #[derive(PartialEq, Eq, Debug)]
-struct Literal {
+pub struct Literal {
     value: String,
     language: String, // Note: this should change to conform to a standard list of language codes
     data_type: NamedNode,
@@ -73,5 +74,12 @@ fn test_valid_named_node_new() {
         value: "https://foo.com/bar".to_string(),
     };
 
-    assert_eq!(NamedNode::new("https://foo.com/bar")?, nn);
+    assert_eq!(NamedNode::new("https://foo.com/bar").unwrap(), nn);
+}
+
+#[test]
+fn test_invalid_named_node_new() {
+    let r = NamedNode::new("foo");
+    assert_eq!(r.is_err(), true);
+    assert_eq!(r.err(), Some(Error::InvalidURIError("foo".to_string())));
 }
