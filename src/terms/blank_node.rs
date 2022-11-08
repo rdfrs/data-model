@@ -1,0 +1,46 @@
+use crate::error::Error;
+use std::fmt::{Display, Formatter};
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct BlankNode {
+    value: String,
+}
+
+impl BlankNode {
+    pub fn new(value: &str) -> Result<Self, Error> {
+        Ok(BlankNode {
+            value: value.to_string(),
+        })
+    }
+}
+
+impl Display for BlankNode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "_:{}", self.value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_equality() {
+        let bn1 = BlankNode {
+            value: "foo".to_string(),
+        };
+        let bn2 = BlankNode {
+            value: "foo".to_string(),
+        };
+
+        assert_eq!(bn1, bn2);
+        assert_eq!(bn2, bn1);
+    }
+
+    #[test]
+    fn test_display() {
+        let expected = "_:b1";
+        let bn = BlankNode::new("b1").expect("error creating BlankNode");
+        assert_eq!(expected, format!("{bn}"));
+    }
+}
