@@ -56,7 +56,7 @@ mod tests {
     }
 
     #[test]
-    fn test_new_valid_url() {
+    fn new_valid_url() {
         let nn = NamedNode {
             value: "https://foo.com/bar".to_string(),
         };
@@ -65,14 +65,14 @@ mod tests {
     }
 
     #[test]
-    fn test_new_invalid_url() {
+    fn new_invalid_url() {
         let r = NamedNode::new("foo");
         assert_eq!(r.is_err(), true);
         assert_eq!(r.err().unwrap(), Error::InvalidURIError("foo".to_string()));
     }
 
     #[test]
-    fn test_display() {
+    fn display() {
         let expected = "<https://foo.com/bar>";
         let nn = NamedNode::new("https://foo.com/bar").expect("error creating NamedNode");
         assert_eq!(expected, format!("{nn}"));

@@ -25,7 +25,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_equality() {
+    fn equality() {
         let bn1 = BlankNode {
             value: "foo".to_string(),
         };
@@ -38,7 +38,7 @@ mod tests {
     }
 
     #[test]
-    fn test_display() {
+    fn display() {
         let expected = "_:b1";
         let bn = BlankNode::new("b1").expect("error creating BlankNode");
         assert_eq!(expected, format!("{bn}"));
