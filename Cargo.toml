@@ -9,4 +9,4 @@ edition = "2021"
 regex = "1"
 thiserror = "1.0"
 chrono = "0.4"
-time = "0.3"
+time = { version = "0.3", features = ["macros"] }

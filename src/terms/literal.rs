@@ -17,13 +17,18 @@ impl<T: XsdType> Literal<T> {
             data_type: T::xsd_type(),
         })
     }
+
+    pub fn with_language(mut self, language: &str) -> Result<Self, Error> {
+        self.language = Some(language.to_string());
+        Ok(self)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use chrono::Utc;
-    use time::Time;
+    use time::macros::time;
 
     #[test]
     fn equality() {
@@ -94,7 +99,22 @@ mod tests {
 
     #[test]
     fn display_for_spanish_string() {
-        todo!();
+        let expected = Literal {
+            value: "Hola Mundo",
+            language: Some("es".to_string()),
+            data_type: NamedNode {
+                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
+            },
+        };
+
+        // let l1 = Literal::for_language("Hola Mundo", "es");
+        let l2 = Literal::new("Hola Mundo")
+            .unwrap()
+            .with_language("es")
+            .unwrap();
+
+        assert_eq!(expected, l2);
+        // todo!();
     }
 
     #[test]
@@ -170,14 +190,14 @@ mod tests {
     #[test]
     fn display_for_time() {
         let expected = Literal {
-            value: Time::from_hms(12, 0, 0).unwrap(),
+            value: time!(12:00:00),
             language: None,
             data_type: NamedNode {
                 value: "http://www.w3.org/2001/XMLSchema#time".to_string(),
             },
         };
 
-        let l1 = Literal::new(Time::from_hms(12, 0, 0).unwrap()).unwrap();
+        let l1 = Literal::new(time!(12:00:00)).unwrap();
         assert_eq!(expected, l1);
     }
 }
