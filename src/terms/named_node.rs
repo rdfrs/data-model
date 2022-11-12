@@ -54,12 +54,13 @@ mod tests {
     }
 
     #[test]
-    fn new_valid_url() {
+    fn new_valid_url() -> Result<(), Error> {
         let nn = NamedNode {
             value: "https://foo.com/bar".to_string(),
         };
 
-        assert_eq!(NamedNode::new("https://foo.com/bar").unwrap(), nn);
+        assert_eq!(NamedNode::new("https://foo.com/bar")?, nn);
+        Ok(())
     }
 
     #[test]

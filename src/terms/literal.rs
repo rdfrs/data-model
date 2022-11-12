@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn construct_english_string() {
+    fn construct_english_string() -> Result<(), Error> {
         let expected = Literal {
             value: "foo".to_string(),
             language: None,
@@ -81,12 +81,13 @@ mod tests {
             },
         };
 
-        let l1 = Literal::new("foo".to_string()).unwrap();
+        let l1 = Literal::new("foo".to_string())?;
         assert_eq!(expected, l1);
+        Ok(())
     }
 
     #[test]
-    fn construct_english_slice() {
+    fn construct_english_slice() -> Result<(), Error> {
         let expected = Literal {
             value: "foo",
             language: None,
@@ -95,12 +96,13 @@ mod tests {
             },
         };
 
-        let l1 = Literal::new("foo").unwrap();
+        let l1 = Literal::new("foo")?;
         assert_eq!(expected, l1);
+        Ok(())
     }
 
     #[test]
-    fn construct_spanish_string() {
+    fn construct_spanish_string() -> Result<(), Error> {
         let expected = Literal {
             value: "Hola Mundo",
             language: Some("es".to_string()),
@@ -110,17 +112,14 @@ mod tests {
         };
 
         // let l1 = Literal::for_language("Hola Mundo", "es");
-        let l2 = Literal::new("Hola Mundo")
-            .unwrap()
-            .with_language("es")
-            .unwrap();
+        let l2 = Literal::new("Hola Mundo")?.with_language("es")?;
 
         assert_eq!(expected, l2);
-        // todo!();
+        Ok(())
     }
 
     #[test]
-    fn construct_integer() {
+    fn construct_integer() -> Result<(), Error> {
         let expected = Literal {
             value: 42,
             language: None,
@@ -129,12 +128,13 @@ mod tests {
             },
         };
 
-        let l1 = Literal::new(42).unwrap();
+        let l1 = Literal::new(42)?;
         assert_eq!(expected, l1);
+        Ok(())
     }
 
     #[test]
-    fn construct_decimal() {
+    fn construct_decimal() -> Result<(), Error> {
         let expected = Literal {
             value: 42.42,
             language: None,
@@ -143,12 +143,13 @@ mod tests {
             },
         };
 
-        let l1 = Literal::new(42.42).unwrap();
+        let l1 = Literal::new(42.42)?;
         assert_eq!(expected, l1);
+        Ok(())
     }
 
     #[test]
-    fn construct_boolean() {
+    fn construct_boolean() -> Result<(), Error> {
         let expected = Literal {
             value: true,
             language: None,
@@ -157,12 +158,13 @@ mod tests {
             },
         };
 
-        let l1 = Literal::new(true).unwrap();
+        let l1 = Literal::new(true)?;
         assert_eq!(expected, l1);
+        Ok(())
     }
 
     #[test]
-    fn construct_datetime() {
+    fn construct_datetime() -> Result<(), Error> {
         let expected = Literal {
             value: Utc::today().and_hms(0, 0, 0),
             language: None,
@@ -171,12 +173,13 @@ mod tests {
             },
         };
 
-        let l1 = Literal::new(Utc::today().and_hms(0, 0, 0)).unwrap();
+        let l1 = Literal::new(Utc::today().and_hms(0, 0, 0))?;
         assert_eq!(expected, l1);
+        Ok(())
     }
 
     #[test]
-    fn construct_date() {
+    fn construct_date() -> Result<(), Error> {
         let expected = Literal {
             value: Utc::today(),
             language: None,
@@ -185,12 +188,13 @@ mod tests {
             },
         };
 
-        let l1 = Literal::new(Utc::today()).unwrap();
+        let l1 = Literal::new(Utc::today())?;
         assert_eq!(expected, l1);
+        Ok(())
     }
 
     #[test]
-    fn construct_time() {
+    fn construct_time() -> Result<(), Error> {
         let expected = Literal {
             value: time!(12:00:00),
             language: None,
@@ -199,7 +203,8 @@ mod tests {
             },
         };
 
-        let l1 = Literal::new(time!(12:00:00)).unwrap();
+        let l1 = Literal::new(time!(12:00:00))?;
         assert_eq!(expected, l1);
+        Ok(())
     }
 }
