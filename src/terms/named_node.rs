@@ -5,8 +5,8 @@ use std::fmt::{Display, Formatter};
 #[derive(PartialEq, Eq, Debug)]
 pub struct NamedNode {
     // TODO: create a type FQDN that can convert to/from String, url, and &str
-    value: String, // TODO: is there a way to hide the field since I'm validating it in the `new` fn
-                   //   A: yes, in fact, you've already done this by not marking the field `pub`
+    pub(crate) value: String, // TODO: is there a way to hide the field since I'm validating it in the `new` fn
+                              //   A: yes, in fact, you've already done this by not marking the field `pub`
 }
 
 // TODO: need a more robust regex
