@@ -2,6 +2,8 @@ use crate::error::Error;
 use crate::terms::xsd_type::XsdType;
 use crate::terms::NamedNode;
 
+// TODO: implement Display trait for literal
+
 #[derive(PartialEq, Eq, Debug)]
 pub struct Literal<T: XsdType> {
     value: T,
@@ -70,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    fn display_for_english_string() {
+    fn construct_english_string() {
         let expected = Literal {
             value: "foo".to_string(),
             language: None,
@@ -84,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn display_for_english_slice() {
+    fn construct_english_slice() {
         let expected = Literal {
             value: "foo",
             language: None,
@@ -98,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn display_for_spanish_string() {
+    fn construct_spanish_string() {
         let expected = Literal {
             value: "Hola Mundo",
             language: Some("es".to_string()),
@@ -118,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn display_for_integer() {
+    fn construct_integer() {
         let expected = Literal {
             value: 42,
             language: None,
@@ -132,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn display_for_decimal() {
+    fn construct_decimal() {
         let expected = Literal {
             value: 42.42,
             language: None,
@@ -146,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn display_for_boolean() {
+    fn construct_boolean() {
         let expected = Literal {
             value: true,
             language: None,
@@ -160,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn display_for_datetime() {
+    fn construct_datetime() {
         let expected = Literal {
             value: Utc::today().and_hms(0, 0, 0),
             language: None,
@@ -174,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn display_for_date() {
+    fn construct_date() {
         let expected = Literal {
             value: Utc::today(),
             language: None,
@@ -188,7 +190,7 @@ mod tests {
     }
 
     #[test]
-    fn display_for_time() {
+    fn construct_time() {
         let expected = Literal {
             value: time!(12:00:00),
             language: None,

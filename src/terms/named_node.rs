@@ -4,9 +4,7 @@ use std::fmt::{Display, Formatter};
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct NamedNode {
-    // TODO: create a type FQDN that can convert to/from String, url, and &str
-    pub(crate) value: String, // TODO: is there a way to hide the field since I'm validating it in the `new` fn
-                              //   A: yes, in fact, you've already done this by not marking the field `pub`
+    pub(crate) value: String, // TODO: create a type FQDN that can convert to/from String, url, and &str
 }
 
 // TODO: need a more robust regex
@@ -67,7 +65,7 @@ mod tests {
     #[test]
     fn new_invalid_url() {
         let r = NamedNode::new("foo");
-        assert_eq!(r.is_err(), true);
+        assert!(r.is_err());
         assert_eq!(r.err().unwrap(), Error::InvalidURIError("foo".to_string()));
     }
 
