@@ -3,8 +3,6 @@ use crate::terms::xsd_type::XsdType;
 use crate::terms::NamedNode;
 use std::fmt::{Display, Formatter};
 
-// TODO: implement Display trait for literal
-
 #[derive(PartialEq, Eq, Debug)]
 pub struct Literal<T: XsdType + Display> {
     value: T,
