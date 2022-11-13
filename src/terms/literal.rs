@@ -1,17 +1,18 @@
 use crate::error::Error;
 use crate::terms::xsd_type::XsdType;
 use crate::terms::NamedNode;
+use std::fmt::{Display, Formatter};
 
 // TODO: implement Display trait for literal
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct Literal<T: XsdType> {
+pub struct Literal<T: XsdType + Display> {
     value: T,
     language: Option<String>, // Note: this should change to conform to a standard list of language codes
     data_type: NamedNode,
 }
 
-impl<T: XsdType> Literal<T> {
+impl<T: XsdType + Display> Literal<T> {
     pub fn new(value: T) -> Result<Self, Error> {
         Ok(Literal {
             value,
@@ -23,6 +24,22 @@ impl<T: XsdType> Literal<T> {
     pub fn with_language(mut self, language: &str) -> Result<Self, Error> {
         self.language = Some(language.to_string());
         Ok(self)
+    }
+}
+
+impl<T: XsdType + Display> Display for Literal<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let xsd_type = T::xsd_type();
+        if xsd_type == NamedNode::new("http://www.w3.org/2001/XMLSchema#string").unwrap() {
+            match &self.language {
+                Some(lang) => write!(f, "\"{}\"@{}", self.value, lang),
+                None => {
+                    write!(f, "\"{}\"", self.value)
+                }
+            }
+        } else {
+            write!(f, "\"{}\"^^{}", self.value, xsd_type)
+        }
     }
 }
 
@@ -206,5 +223,53 @@ mod tests {
         let l1 = Literal::new(time!(12:00:00))?;
         assert_eq!(expected, l1);
         Ok(())
+    }
+
+    #[test]
+    fn display_lang_string() {
+        let l = Literal {
+            value: "Hola Mundo",
+            language: Some("es".to_string()),
+            data_type: NamedNode {
+                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
+            },
+        };
+
+        let expected = "\"Hola Mundo\"@es".to_string();
+        let actual = format!("{}", l);
+
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn display_string() {
+        let l = Literal {
+            value: "Hello World",
+            language: None,
+            data_type: NamedNode {
+                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
+            },
+        };
+
+        let expected = "\"Hello World\"".to_string();
+        let actual = format!("{}", l);
+
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn display_non_string() {
+        let l = Literal {
+            value: 42,
+            language: None,
+            data_type: NamedNode {
+                value: "http://www.w3.org/2001/XMLSchema#integer".to_string(),
+            },
+        };
+
+        let expected = "\"42\"^^<http://www.w3.org/2001/XMLSchema#integer>".to_string();
+        let actual = format!("{}", l);
+
+        assert_eq!(expected, actual);
     }
 }
