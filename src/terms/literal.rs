@@ -1,42 +1,54 @@
-use crate::error::Error;
-use crate::terms::xsd_type::XsdType;
 use crate::terms::NamedNode;
+use chrono::{DateTime, Utc};
 use std::fmt::{Display, Formatter};
 
-#[derive(PartialEq, Eq, Debug)]
-pub struct Literal<T: XsdType + Display> {
-    value: T,
-    language: Option<String>, // Note: this should change to conform to a standard list of language codes
-    data_type: NamedNode,
+// XSD Primitive Types that we're going to support
+// -----------------------------------------------
+// integer  - 32 bit - chosen as i32 is the default integer type in rust
+// boolean
+// dateTime
+// double   - 64 bit - chosen because f64 is the default floating-point type in rust
+// string
+#[derive(PartialEq, Debug)]
+pub enum Literal {
+    String(String, Option<String>),
+    Int(u32),
+    Boolean(bool),
+    Float(f64),
+    DateTime(DateTime<Utc>),
 }
 
-impl<T: XsdType + Display> Literal<T> {
-    pub fn new(value: T) -> Result<Self, Error> {
-        Ok(Literal {
-            value,
-            language: None,
-            data_type: T::xsd_type(),
-        })
-    }
-
-    pub fn with_language(mut self, language: &str) -> Result<Self, Error> {
-        self.language = Some(language.to_string());
-        Ok(self)
-    }
-}
-
-impl<T: XsdType + Display> Display for Literal<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let xsd_type = T::xsd_type();
-        if xsd_type == NamedNode::new("http://www.w3.org/2001/XMLSchema#string").unwrap() {
-            match &self.language {
-                Some(lang) => write!(f, "\"{}\"@{}", self.value, lang),
-                None => {
-                    write!(f, "\"{}\"", self.value)
-                }
+// TODO: look at implementing the from trait to make it easier
+impl Literal {
+    fn data_type(&self) -> NamedNode {
+        match &self {
+            Literal::String(_, _) => {
+                NamedNode::new("http://www.w3.org/2001/XMLSchema#string").unwrap()
             }
-        } else {
-            write!(f, "\"{}\"^^{}", self.value, xsd_type)
+            Literal::Int(_) => NamedNode::new("http://www.w3.org/2001/XMLSchema#integer").unwrap(),
+            Literal::Boolean(_) => {
+                NamedNode::new("http://www.w3.org/2001/XMLSchema#boolean").unwrap()
+            }
+            Literal::Float(_) => NamedNode::new("http://www.w3.org/2001/XMLSchema#double").unwrap(),
+            Literal::DateTime(_) => {
+                NamedNode::new("http://www.w3.org/2001/XMLSchema#dateTime").unwrap()
+            }
+        }
+    }
+}
+
+impl Display for Literal {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let xsd_type = &self.data_type();
+        match &self {
+            Literal::String(value, lang) => match lang {
+                Some(l) => write!(f, "\"{}\"@{}", value, l),
+                None => write!(f, "\"{}\"", value),
+            },
+            Literal::Int(value) => write!(f, "\"{}\"^^{}", value, xsd_type),
+            Literal::Boolean(value) => write!(f, "\"{}\"^^{}", value, xsd_type),
+            Literal::Float(value) => write!(f, "\"{}\"^^{}", value, xsd_type),
+            Literal::DateTime(value) => write!(f, "\"{}\"^^{}", value, xsd_type),
         }
     }
 }
@@ -49,224 +61,46 @@ mod tests {
 
     #[test]
     fn equality() {
-        let n1 = Literal {
-            value: "foo".to_string(),
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
-            },
-        };
-
-        let n2 = Literal {
-            value: "foo".to_string(),
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
-            },
-        };
-
-        let n3 = Literal {
-            value: "bar".to_string(),
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
-            },
-        };
-
-        let n4 = Literal {
-            value: "bar".to_string(),
-            language: Some("ES".to_string()),
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
-            },
-        };
+        let n1 = Literal::String("foo".to_string(), None);
+        let n2 = Literal::String("foo".to_string(), None);
+        let n3 = Literal::String("bar".to_string(), None);
+        let n4 = Literal::String("bar".to_string(), Some("es".to_string()));
+        let n5 = Literal::Int(42);
+        let n6 = Literal::Int(42);
 
         assert_eq!(n1, n2);
         assert_ne!(n1, n3);
         assert_ne!(n3, n4);
-    }
-
-    #[test]
-    fn construct_english_string() -> Result<(), Error> {
-        let expected = Literal {
-            value: "foo".to_string(),
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
-            },
-        };
-
-        let l1 = Literal::new("foo".to_string())?;
-        assert_eq!(expected, l1);
-        Ok(())
-    }
-
-    #[test]
-    fn construct_english_slice() -> Result<(), Error> {
-        let expected = Literal {
-            value: "foo",
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
-            },
-        };
-
-        let l1 = Literal::new("foo")?;
-        assert_eq!(expected, l1);
-        Ok(())
-    }
-
-    #[test]
-    fn construct_spanish_string() -> Result<(), Error> {
-        let expected = Literal {
-            value: "Hola Mundo",
-            language: Some("es".to_string()),
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
-            },
-        };
-
-        // let l1 = Literal::for_language("Hola Mundo", "es");
-        let l2 = Literal::new("Hola Mundo")?.with_language("es")?;
-
-        assert_eq!(expected, l2);
-        Ok(())
-    }
-
-    #[test]
-    fn construct_integer() -> Result<(), Error> {
-        let expected = Literal {
-            value: 42,
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#integer".to_string(),
-            },
-        };
-
-        let l1 = Literal::new(42)?;
-        assert_eq!(expected, l1);
-        Ok(())
-    }
-
-    #[test]
-    fn construct_decimal() -> Result<(), Error> {
-        let expected = Literal {
-            value: 42.42,
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#double".to_string(),
-            },
-        };
-
-        let l1 = Literal::new(42.42)?;
-        assert_eq!(expected, l1);
-        Ok(())
-    }
-
-    #[test]
-    fn construct_boolean() -> Result<(), Error> {
-        let expected = Literal {
-            value: true,
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#boolean".to_string(),
-            },
-        };
-
-        let l1 = Literal::new(true)?;
-        assert_eq!(expected, l1);
-        Ok(())
-    }
-
-    #[test]
-    fn construct_datetime() -> Result<(), Error> {
-        let expected = Literal {
-            value: Utc::today().and_hms(0, 0, 0),
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#dateTime".to_string(),
-            },
-        };
-
-        let l1 = Literal::new(Utc::today().and_hms(0, 0, 0))?;
-        assert_eq!(expected, l1);
-        Ok(())
-    }
-
-    #[test]
-    fn construct_date() -> Result<(), Error> {
-        let expected = Literal {
-            value: Utc::today(),
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#date".to_string(),
-            },
-        };
-
-        let l1 = Literal::new(Utc::today())?;
-        assert_eq!(expected, l1);
-        Ok(())
-    }
-
-    #[test]
-    fn construct_time() -> Result<(), Error> {
-        let expected = Literal {
-            value: time!(12:00:00),
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#time".to_string(),
-            },
-        };
-
-        let l1 = Literal::new(time!(12:00:00))?;
-        assert_eq!(expected, l1);
-        Ok(())
+        assert_ne!(n1, n5);
+        assert_eq!(n5, n6);
     }
 
     #[test]
     fn display_lang_string() {
-        let l = Literal {
-            value: "Hola Mundo",
-            language: Some("es".to_string()),
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
-            },
-        };
+        let l = Literal::String("Hola Mundo".to_string(), Some("es".to_string()));
 
         let expected = "\"Hola Mundo\"@es".to_string();
-        let actual = format!("{}", l);
+        let actual = format!("{l}");
 
         assert_eq!(expected, actual);
     }
 
     #[test]
     fn display_string() {
-        let l = Literal {
-            value: "Hello World",
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#string".to_string(),
-            },
-        };
+        let l = Literal::String("Hello World".to_string(), None);
 
         let expected = "\"Hello World\"".to_string();
-        let actual = format!("{}", l);
+        let actual = format!("{l}");
 
         assert_eq!(expected, actual);
     }
 
     #[test]
     fn display_non_string() {
-        let l = Literal {
-            value: 42,
-            language: None,
-            data_type: NamedNode {
-                value: "http://www.w3.org/2001/XMLSchema#integer".to_string(),
-            },
-        };
+        let l = Literal::Int(42);
 
         let expected = "\"42\"^^<http://www.w3.org/2001/XMLSchema#integer>".to_string();
-        let actual = format!("{}", l);
+        let actual = format!("{l}");
 
         assert_eq!(expected, actual);
     }
