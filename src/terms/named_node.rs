@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct NamedNode {
-    pub(crate) value: String, // TODO: create a type FQDN that can convert to/from String, url, and &str
+    value: String, // TODO: create a type FQDN that can convert to/from String, url, and &str
 }
 
 // TODO: need a more robust regex

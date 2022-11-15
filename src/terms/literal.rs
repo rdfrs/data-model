@@ -56,8 +56,6 @@ impl Display for Literal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
-    use time::macros::time;
 
     #[test]
     fn equality() {

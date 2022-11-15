@@ -4,11 +4,11 @@ use crate::terms::NamedNode;
 use std::fmt::{Display, Formatter};
 
 #[derive(PartialEq)]
-struct Quad {
-    subject: Subject,
-    predicate: NamedNode,
-    object: Object,
-    graph: Option<NamedNode>,
+pub struct Quad {
+    pub subject: Subject,
+    pub predicate: NamedNode,
+    pub object: Object,
+    pub graph: Option<NamedNode>,
 }
 
 impl Display for Quad {
@@ -28,14 +28,14 @@ impl Display for Quad {
     }
 }
 
-#[derive(PartialEq)]
-enum Subject {
+#[derive(PartialEq, Eq)]
+pub enum Subject {
     NamedNode(NamedNode),
     BlankNode(BlankNode),
 }
 
 #[derive(PartialEq)]
-enum Object {
+pub enum Object {
     NamedNode(NamedNode),
     BlankNode(BlankNode),
     Literal(Literal),
@@ -53,7 +53,7 @@ mod tests {
         let p = NamedNode::new("https://schema.org/name")?;
         let o = Literal::String("bar".to_string(), None);
 
-        let q = Quad {
+        let _q = Quad {
             subject: Subject::NamedNode(s),
             predicate: p,
             object: Object::Literal(o),
@@ -69,7 +69,7 @@ mod tests {
         let p = NamedNode::new("https://schema.org/hasPart")?;
         let o = NamedNode::new("http://foo.com/baz")?;
 
-        let q = Quad {
+        let _q = Quad {
             subject: Subject::NamedNode(s),
             predicate: p,
             object: Object::NamedNode(o),
