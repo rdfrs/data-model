@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 
 // XSD Primitive Types that we're going to support
 // -----------------------------------------------
-// integer  - 32 bit - chosen as i32 is the default integer type in rust
+// integer - usize since it has some flexibility with processor architecture
 // boolean
 // dateTime
 // double   - 64 bit - chosen because f64 is the default floating-point type in rust
@@ -12,7 +12,7 @@ use std::fmt::{Display, Formatter};
 #[derive(PartialEq, Debug)]
 pub enum Literal {
     String(String, Option<String>),
-    Int(u32),
+    Int(usize),
     Boolean(bool),
     Float(f64),
     DateTime(DateTime<Utc>),
