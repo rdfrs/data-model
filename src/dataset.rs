@@ -1,11 +1,9 @@
-use crate::error::Error;
-use crate::quad::{Object, Quad, Subject};
-use crate::terms::NamedNode;
+use crate::quad::Quad;
 
 trait Dataset: Sized {
     // design thought: take ownership of the quad and return a shared reference to it
-    fn add(&mut self, quad: Quad) -> &Quad;
-    fn size(&self) -> usize;
+    fn push(&mut self, quad: Quad) -> &Quad;
+    fn length(&self) -> usize;
     // fn delete(&self, quad: &Quad) -> Result<Error, Self>;
     // fn has(&self, quad: &Quad) -> bool;
     // fn match_term(
@@ -53,12 +51,24 @@ impl NaiveDataset {
 // TODO: read chapter on iteration and collections
 // TODO: read chapter on functions and/or closures
 impl Dataset for NaiveDataset {
-    fn add(&mut self, quad: Quad) -> &Quad {
-        self.quads.push(quad);
-        self.quads.last().unwrap()
+    fn push(&mut self, quad: Quad) -> &Quad {
+        if self.quads.contains(&quad) == false {
+            self.quads.push(quad);
+            self.quads.last().unwrap()
+        } else {
+            // given that this naive structure is really a vanilla set,
+            // order isn't really something we can count on
+            for q in &(self.quads) {
+                if q == &quad {
+                    q
+                } else {
+                    panic!("should not get here")
+                }
+            }
+        }
     }
 
-    fn size(&self) -> usize {
+    fn length(&self) -> usize {
         self.quads.len()
     }
 }
@@ -72,13 +82,33 @@ mod test {
     #[test]
     fn add_quad() {
         let mut ds = NaiveDataset::new();
-        let q = ds.add(quad::Quad {
+        ds.push(quad::Quad {
             subject: quad::Subject::BlankNode(terms::BlankNode::new("b1").unwrap()),
             predicate: terms::NamedNode::new("https://foo.bar/baz").unwrap(),
             object: quad::Object::Literal(terms::Literal::Int(42)),
             graph: None,
         });
 
-        assert_eq!(1, ds.size())
+        assert_eq!(1, ds.length())
+    }
+
+    #[test]
+    fn add_quad_does_not_allow_duplicates() {
+        let mut ds = NaiveDataset::new();
+        ds.push(quad::Quad {
+            subject: quad::Subject::BlankNode(terms::BlankNode::new("b1").unwrap()),
+            predicate: terms::NamedNode::new("https://foo.bar/baz").unwrap(),
+            object: quad::Object::Literal(terms::Literal::Int(42)),
+            graph: None,
+        });
+
+        ds.push(quad::Quad {
+            subject: quad::Subject::BlankNode(terms::BlankNode::new("b1").unwrap()),
+            predicate: terms::NamedNode::new("https://foo.bar/baz").unwrap(),
+            object: quad::Object::Literal(terms::Literal::Int(42)),
+            graph: None,
+        });
+
+        assert_eq!(1, ds.length())
     }
 }
