@@ -1,3 +1,4 @@
+use super::Object;
 use crate::terms::NamedNode;
 use chrono::{DateTime, Utc};
 use std::fmt::{Display, Formatter};
@@ -17,6 +18,8 @@ pub enum Literal {
     Float(f64),
     DateTime(DateTime<Utc>),
 }
+
+impl Object for Literal {}
 
 // TODO: look at implementing the from trait to make it easier
 impl Literal {
