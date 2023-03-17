@@ -14,11 +14,11 @@ pub struct Quad {
 }
 
 impl Quad {
-    pub fn new(s: Box<dyn Subject + 'static>, p: NamedNode, o: Box<dyn Object + 'static>, g: Option<NamedNode>) -> Result<Quad> {
+    pub fn new<S: Subject + 'static, O: Object + 'static>(s: S, p: NamedNode, o: O, g: Option<NamedNode>) -> Result<Quad> {
         Ok(Quad{
-            subject: s,
+            subject: Box::new(s),
             predicate: p,
-            object: o,
+            object: Box::new(o),
             graph: g
         })
     }
@@ -54,16 +54,16 @@ mod tests{
     #[test]
     fn quads_should_be_equal_based_on_terms() -> Result<()>{
         let q1 = Quad::new(
-            Box::new(NamedNode::new("http://foo.com/bar")?), 
+            NamedNode::new("http://foo.com/bar")?, 
             NamedNode::new("https://schema.org/name")?, 
-            Box::new(Literal::String("bar".to_string(), None)), 
+            Literal::String("bar".to_string(), None), 
             None
         )?;
 
         let q2 = Quad::new(
-            Box::new(NamedNode::new("http://foo.com/bar")?), 
+            NamedNode::new("http://foo.com/bar")?, 
             NamedNode::new("https://schema.org/name")?, 
-            Box::new(Literal::String("bar".to_string(), None)), 
+            Literal::String("bar".to_string(), None), 
             None
         )?;
 
