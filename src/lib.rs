@@ -10,5 +10,7 @@ pub enum Error {
 type Result<T> = std::result::Result<T, Error>;
 
 pub mod dataset;
-pub mod quad;
+mod quad_enums;
+mod quad_generics;
+mod quad_trait_obj;
 pub mod terms;

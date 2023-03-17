@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
-pub trait Subject: Display {}
+pub trait Subject: Display + PartialEq {}
 
-pub trait Object: Display {}
+pub trait Object: Display + PartialEq {}
 
 mod blank_node;
 mod literal;
