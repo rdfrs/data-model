@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::Result;
 use crate::terms::*;
 
@@ -6,6 +8,7 @@ use crate::terms::*;
 // Cons: While it needs more research, boxing trait objects is potentially less than optimal
 //       Requires downcasting from the boxed trait object to get back to the term data members
 
+#[derive(PartialEq)]
 pub struct Quad {
     subject: Box<dyn Subject>,
     predicate: NamedNode,
@@ -24,9 +27,13 @@ impl Quad {
     }
 }
 
-impl PartialEq for Quad{
-    fn eq(&self, other: &Self) -> bool {
-        self.subject.as_ref() == other.subject.as_ref() && self.predicate == other.predicate && self.object == other.object && self.graph == other.graph
+impl Display for Quad{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} {} {} .",
+            &self.subject.as_ref(), &self.predicate, &self.object.as_ref()
+        )
     }
 }
 
@@ -37,9 +44,9 @@ mod tests{
     #[test]
     fn quad_should_have_the_correct_terms() -> Result<()>{
         let q = Quad::new(
-            Box::new(NamedNode::new("http://foo.com/bar")?), 
+            NamedNode::new("http://foo.com/bar")?, 
             NamedNode::new("https://schema.org/name")?, 
-            Box::new(Literal::String("bar".to_string(), None)), 
+            Literal::String("bar".to_string(), None), 
             None
         )?;
 
@@ -77,9 +84,9 @@ mod tests{
         let expected = "<http://foo.com/bar> <https://schema.org/name> \"bar\" .".to_string();
         
         let q = Quad::new(
-            Box::new(NamedNode::new("http://foo.com/bar")?), 
+            NamedNode::new("http://foo.com/bar")?, 
             NamedNode::new("https://schema.org/name")?, 
-            Box::new(Literal::String("bar".to_string(), None)), 
+            Literal::String("bar".to_string(), None), 
             None
         )?;
 
