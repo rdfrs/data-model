@@ -94,7 +94,7 @@ impl From<Literal> for Object {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct NamedNode {
     value: String,
 }
@@ -118,8 +118,18 @@ impl TryFrom<&str> for NamedNode {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct BlankNode {}
+#[derive(Debug, PartialEq, Clone)]
+pub struct BlankNode {
+    local_name: String,
+}
+
+impl From<&str> for BlankNode {
+    fn from(value: &str) -> Self {
+        BlankNode {
+            local_name: value.to_string(),
+        }
+    }
+}
 
 const XSD_STRING: &str = "http://www.w3.org/2001/XMLSchema#string";
 const XSD_INTEGER: &str = "http://www.w3.org/2001/XMLSchema#integer";
@@ -259,6 +269,16 @@ mod tests {
         assert_eq!(expected_int_literal, int_literal);
         assert_eq!(expected_bool_literal, bool_literal);
 
+        Ok(())
+    }
+
+    #[test]
+    fn create_blank_node() -> GenericResult<()> {
+        let b = BlankNode::from("b0");
+        let expected = BlankNode {
+            local_name: "b0".to_string(),
+        };
+        assert_eq!(expected, b);
         Ok(())
     }
 }
