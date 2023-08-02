@@ -1,4 +1,5 @@
-use crate::error::Error;
+use super::{Object, Subject};
+use crate::{Error, Result};
 use regex::Regex;
 use std::fmt::{Display, Formatter};
 
@@ -7,11 +8,15 @@ pub struct NamedNode {
     value: String, // TODO: create a type FQDN that can convert to/from String, url, and &str
 }
 
+impl Subject for NamedNode {}
+
+impl Object for NamedNode {}
+
 // TODO: need a more robust regex
 const ABSOLUTE_URI_EXPRESSION: &str = r"^(?:http|https)://(?:\w+\.)+\w+/.*$";
 
 impl NamedNode {
-    pub fn new(value: &str) -> Result<Self, Error> {
+    pub fn new(value: &str) -> Result<Self> {
         let regex =
             Regex::new(ABSOLUTE_URI_EXPRESSION).expect("Absolute URI Regex failed to compile");
 
@@ -54,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    fn new_valid_url() -> Result<(), Error> {
+    fn new_valid_url() -> Result<()> {
         let nn = NamedNode {
             value: "https://foo.com/bar".to_string(),
         };

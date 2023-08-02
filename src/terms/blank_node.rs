@@ -1,13 +1,21 @@
-use crate::error::Error;
-use std::fmt::{Display, Formatter};
+use super::{Object, Subject};
+use crate::Result;
+use std::{
+    fmt::{Display, Formatter},
+    ops::Sub,
+};
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct BlankNode {
     value: String,
 }
 
+impl Subject for BlankNode {}
+
+impl Object for BlankNode {}
+
 impl BlankNode {
-    pub fn new(value: &str) -> Result<Self, Error> {
+    pub fn new(value: &str) -> Result<Self> {
         Ok(BlankNode {
             value: value.to_string(),
         })

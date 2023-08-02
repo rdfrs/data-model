@@ -1,6 +1,13 @@
-mod named_node;
-pub use named_node::NamedNode;
+use std::fmt::Display;
+
+pub trait Subject: Display{}
+
+pub trait Object: Display{}
+
 mod blank_node;
-pub use blank_node::BlankNode;
 mod literal;
+mod named_node;
+
+pub use blank_node::BlankNode;
 pub use literal::Literal;
+pub use named_node::NamedNode;
