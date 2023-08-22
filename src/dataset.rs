@@ -2,11 +2,16 @@ use crate::object::Object;
 use crate::quad::Quad;
 use crate::subject::Subject;
 use crate::NamedNode;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+// use std::iter::from_fn;
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Dataset {
     quads: HashSet<Quad>,
+    subject_index: HashMap<Subject, Box<Quad>>,
+    predicate_index: HashMap<NamedNode, Box<Quad>>,
+    object_index: HashMap<Object, Box<Quad>>,
+    graph_index: HashMap<NamedNode, Box<Quad>>, // only create entry if there's a named graph
 }
 
 impl Dataset {
@@ -19,7 +24,7 @@ impl Dataset {
     }
 
     pub fn insert(&mut self, q: Quad) {
-        self.quads.insert(q.into());
+        self.quads.insert(q);
     }
 
     pub fn delete(&mut self, q: &Quad) {
@@ -30,20 +35,33 @@ impl Dataset {
         self.quads.contains(q)
     }
 
-    pub fn match_term<S, P, O, G>(
+    // 2 solution options to ensure I understand
+    // 1) pass the match terms as references and understand how the lifetime annotations should work
+    // 2) move the match terms into the iterator so that their lifetimes are bound by the closure
+    //
+    // I think the problem here may be related to the fact that our type parameters may inherently
+    // be borrows because they are trait specifications. Let's try getting to more concrete types
+    // outside the closure.... NOPE
+    pub fn match_term(
         &self,
-        subject: Option<S>,
-        predicate: Option<P>,
-        object: Option<O>,
-        graph: Option<G>,
-    ) -> &Dataset
-    where
-        S: Into<Subject>,
-        P: Into<NamedNode>,
-        O: Into<Object>,
-        G: Into<NamedNode>,
-    {
-        todo!()
+        subject: Option<Subject>,
+        predicate: Option<NamedNode>,
+        object: Option<Object>,
+        graph: Option<NamedNode>,
+    ) -> impl Iterator<Item = &Quad> {
+        // implement the naive approach first - O(n) and then apply indexing
+        // to implement a more custom iterator (using index), leverage std::iter::from_fn
+
+        self.quads.iter().filter(move |q| -> bool {
+            let subject_equals = subject.as_ref().is_some_and(|v| v == &q.subject);
+            let predicate_equals = predicate.as_ref().is_some_and(|v| v == &q.predicate);
+            let object_equals = object.as_ref().is_some_and(|v| v == &q.object);
+            let graph_equals = graph.as_ref().is_some_and(|v| match &q.graph {
+                None => false,
+                Some(qv) => v == qv,
+            });
+            subject_equals || predicate_equals || object_equals || graph_equals
+        })
     }
 }
 
@@ -95,6 +113,41 @@ mod tests {
         )?);
 
         ds.insert(Quad::new(
+            NamedNode::try_from("https://acme.com/JaneDoe")?,
+            NamedNode::try_from("https://schema.org/modified")?,
+            Literal::from("Mon Jul 31 22:19:04 CDT 2023"),
+            None,
+        )?);
+
+        ds.insert(Quad::new(
+            NamedNode::try_from("https://acme.com/JaneDoe")?,
+            NamedNode::try_from("https://schema.org/name")?,
+            Literal::from("Jane Doe"),
+            None,
+        )?);
+
+        ds.insert(Quad::new(
+            NamedNode::try_from("https://acme.com/JaneDoe")?,
+            NamedNode::try_from("https://schema.org/telephone")?,
+            Literal::from("(425) 123-4567"),
+            None,
+        )?);
+
+        ds.insert(Quad::new(
+            NamedNode::try_from("https://acme.com/JaneDoe")?,
+            NamedNode::try_from("https://schema.org/url")?,
+            NamedNode::try_from("https://www.janedoe.com")?,
+            None,
+        )?);
+
+        ds.insert(Quad::new(
+            NamedNode::try_from("https://acme.com/JaneDoe")?,
+            NamedNode::try_from("https://www.w3.org/1999/02/22-rdf-syntax-ns#type")?,
+            NamedNode::try_from("https://schema.org/Person")?,
+            None,
+        )?);
+
+        ds.insert(Quad::new(
             BlankNode::from("b0"),
             NamedNode::try_from("https://schema.org/bar")?,
             Literal::from(1),
@@ -106,7 +159,7 @@ mod tests {
 
     #[test]
     fn sample_dataset_length() -> GenericResult<()> {
-        assert_eq!(5, create_sample_dataset()?.len());
+        assert_eq!(10, create_sample_dataset()?.len());
         Ok(())
     }
 
@@ -162,8 +215,67 @@ mod tests {
 
         ds.delete(&q);
 
-        assert_eq!(4, ds.len());
+        assert_eq!(9, ds.len());
 
         Ok(())
+    }
+
+    #[test]
+    fn match_subject() -> GenericResult<()> {
+        let ds = create_sample_dataset()?;
+
+        let term = NamedNode::try_from("https://acme.com/JaneDoe")?;
+
+        let expected: usize = 9;
+        let actual = ds
+            .match_term(Some(Subject::NamedNode(term)), None, None, None)
+            .collect::<Vec<_>>()
+            .len();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[test]
+    fn match_predicate() -> GenericResult<()> {
+        let ds = create_sample_dataset()?;
+
+        let term = NamedNode::try_from("https://schema.org/name")?;
+
+        let expected: usize = 1;
+        let actual = ds
+            .match_term(None, Some(term), None, None)
+            .collect::<Vec<_>>()
+            .len();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[test]
+    fn match_object() -> GenericResult<()> {
+        let ds = create_sample_dataset()?;
+
+        let term = Literal::from(true);
+
+        let expected: usize = 1;
+        let actual = ds
+            .match_term(None, None, Some(Object::Literal(term)), None)
+            .collect::<Vec<_>>()
+            .len();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[test]
+    fn match_subject_and_predicate() -> GenericResult<()> {
+        // the current logic is incorrect
+        // per https://rdf.js.org/dataset-spec/#quad-matching, "Only quads matching all of the
+        // given non-null arguments will be selected"
+        todo!()
     }
 }

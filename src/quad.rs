@@ -5,10 +5,10 @@ use crate::GenericResult;
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Quad {
-    subject: Subject,
-    predicate: NamedNode,
-    object: Object,
-    graph: Option<NamedNode>,
+    pub(crate) subject: Subject,
+    pub(crate) predicate: NamedNode,
+    pub(crate) object: Object,
+    pub(crate) graph: Option<NamedNode>,
 }
 
 impl Quad {
