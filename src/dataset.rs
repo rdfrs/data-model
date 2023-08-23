@@ -35,13 +35,7 @@ impl Dataset {
         self.quads.contains(q)
     }
 
-    // 2 solution options to ensure I understand
-    // 1) pass the match terms as references and understand how the lifetime annotations should work
-    // 2) move the match terms into the iterator so that their lifetimes are bound by the closure
-    //
-    // I think the problem here may be related to the fact that our type parameters may inherently
-    // be borrows because they are trait specifications. Let's try getting to more concrete types
-    // outside the closure.... NOPE
+    // logic follows https://rdf.js.org/dataset-spec/#quad-matching
     pub fn match_term(
         &self,
         subject: Option<Subject>,
@@ -53,14 +47,40 @@ impl Dataset {
         // to implement a more custom iterator (using index), leverage std::iter::from_fn
 
         self.quads.iter().filter(move |q| -> bool {
-            let subject_equals = subject.as_ref().is_some_and(|v| v == &q.subject);
-            let predicate_equals = predicate.as_ref().is_some_and(|v| v == &q.predicate);
-            let object_equals = object.as_ref().is_some_and(|v| v == &q.object);
-            let graph_equals = graph.as_ref().is_some_and(|v| match &q.graph {
-                None => false,
-                Some(qv) => v == qv,
-            });
-            subject_equals || predicate_equals || object_equals || graph_equals
+            if let Some(s) = subject.as_ref() {
+                if s != &q.subject {
+                    return false;
+                }
+            }
+
+            if let Some(p) = predicate.as_ref() {
+                if p != &q.predicate {
+                    return false;
+                }
+            }
+
+            if let Some(o) = object.as_ref() {
+                if o != &q.object {
+                    return false;
+                }
+            }
+
+            if let Some(g) = graph.as_ref() {
+                if q.graph.is_none() || q.graph.as_ref().is_some_and(|v| v != g) {
+                    return false;
+                }
+            }
+
+            #[cfg(test)]
+            {
+                println!("\nquad values: {:?}", q);
+                println!(
+                    "match parameters:\nsubject {:?}\npredicate {:?}\nobject {:?}\ngraph {:?}",
+                    subject, predicate, object, graph
+                );
+            }
+
+            true
         })
     }
 }
@@ -273,10 +293,6 @@ mod tests {
 
     #[test]
     fn match_subject_and_predicate() -> GenericResult<()> {
-        // the current logic is incorrect
-        // per https://rdf.js.org/dataset-spec/#quad-matching, "Only quads matching all of the
-        // given non-null arguments will be selected"
-
         let ds = create_sample_dataset()?;
 
         let subj = NamedNode::try_from("https://acme.com/JaneDoe")?;
@@ -295,6 +311,6 @@ mod tests {
 
         assert_eq!(expected, actual);
 
-        todo!()
+        Ok(())
     }
 }
