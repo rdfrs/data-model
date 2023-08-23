@@ -276,6 +276,25 @@ mod tests {
         // the current logic is incorrect
         // per https://rdf.js.org/dataset-spec/#quad-matching, "Only quads matching all of the
         // given non-null arguments will be selected"
+
+        let ds = create_sample_dataset()?;
+
+        let subj = NamedNode::try_from("https://acme.com/JaneDoe")?;
+        let obj = Literal::from(true);
+
+        let expected: usize = 1;
+        let actual = ds
+            .match_term(
+                Some(Subject::NamedNode(subj)),
+                None,
+                Some(Object::Literal(obj)),
+                None,
+            )
+            .collect::<Vec<_>>()
+            .len();
+
+        assert_eq!(expected, actual);
+
         todo!()
     }
 }
